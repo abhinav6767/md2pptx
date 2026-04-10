@@ -41,7 +41,7 @@ Dataset:
 # Provide the raw Python code below:
 """
         response = self.client.models.generate_content(
-            model='gemini-3.1-pro-preview',
+            model='gemini-2.5-flash',
             contents=prompt,
             config={'temperature': 0.7} # slightly creative to make unique charts
         )
