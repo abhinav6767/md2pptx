@@ -1,0 +1,240 @@
+<!-- Slide number: 1 -->
+Slides feel like documents, not slides
+Viewer doesn’t know where to look first
+Content is not aligned to a consistent grid
+Uneven spacing between sections
+Elements feel “placed” not “designed”
+Section 4 table: Looks like raw Excel pasted - No emphasis on trends
+Icons are rarely used
+SECTION 1, 2…” is present but: Not visually strong
+Lists (bullet points) are used, Instead of Structured Frameworks or infographics
+Overall there is no use of visual for:
+AI
+Cyber
+Learning
+Finance
+Images are not used anywhere
+
+<!-- Slide number: 2 -->
+
+ACCENTURE
+Tech Acquisition
+Analysis
+Blue Shape not properly aligned with the text
+An in-depth examination of Accenture's tech acquisitions
+from 2020 to 2025 and their effect on competitive strategy
+
+Strategic Intelligence Report  |  2020–2025
+
+### Notes:
+
+<!-- Slide number: 3 -->
+
+EXECUTIVE SUMMARY
+326 Acquisitions. One Unified Vision.
+
+Numbers (e.g., 326 acquisitions, $6.6B) are not visually dominant enough
+
+326
+$6.6B
+$5.9B
+$2.7B
+Not distributed properly within the boxes
+Total acquisitions (2020–2025)
+Invested in FY24 alone
+Advanced AI bookings in FY25
+Advanced AI revenue in FY25 (+200%)
+Acquired Halfspace, CyberCX, Altus Consulting & Yumemi to lead in AI, cybersecurity, financial services & design engineering.
+Invested in learning platforms (Ascendient Learning, Aidemy) to build large-scale AI talent programs.
+Sole-sourced, proactive acquisition model enabled Accenture to outpace competitors in both volume and deal value.
+Reinvention Services model consolidates Strategy, Consulting, Song, Technology & Operations into one AI-powered unit.
+Despite $865M restructuring, FY25 total revenue rose 7% to $69.7B — underscoring acquisitions as a growth engine.
+Slide is empty a lot of negative space here
+Accenture Tech Acquisition Analysis | 2020–2025
+
+### Notes:
+
+<!-- Slide number: 4 -->
+Could be created in an infographic style
+
+SECTION 1
+Strategic Context & Acquisition Framework
+
+AI & Digital Reinvention Era
+Learning & Talent Ecosystem
+Not distributed properly within the boxes
+Acquisitions like NeuraFlash (agentic AI + Salesforce), SI&C (data/AI in Japan), and Halfspace (Nordics AI) reflect Accenture's push to embed AI expertise globally.
+Ascendient Learning and Aidemy advance the LearnVantage initiative — delivering AI reskilling at enterprise scale.
+
+Cybersecurity Priority
+Reinvention Services Integration
+CyberCX (Asia-Pacific, +1,400 professionals) and IAMConcepts (Canada) fortify Accenture's largest-ever cyber practice.
+All acquisitions feed into the Reinvention Services model (Sept 2025), a unified unit spanning five service lines with AI embedded at core.
+The spacing throughout the slides is not consistent
+Accenture Tech Acquisition Analysis | 2020–2025
+
+### Notes:
+
+<!-- Slide number: 5 -->
+
+SECTION 2
+Acquisition Trends & Patterns (2020–2025)
+There should be no margins within text boxes which does not have any fill color
+
+| Fiscal Year | Acquisitions | Investment | Key Focus Domains |
+| --- | --- | --- | --- |
+| FY 2020 | 34 | $1.5B | Mixed: AI, Cloud, Cybersecurity |
+| FY 2021 | 46 | $4.2B | Broad Digital, AI, Infrastructure |
+| FY 2024 | 46 | $6.6B | Digital, AI, Cloud, Industry-Specific |
+| FY 2025 (YTD) | 10+ | N/A | AI, Learning, Engineering, Infrastructure |
+Text should be middle aligned om this table
+Geographic Reach
+Europe: Halfspace (Denmark), Sipal IPS (Italy), Systema (Germany), Soben (UK), Staufen AG (Germany)
+Asia-Pacific: CyberCX (Australia), Yumemi (Japan), Aidemy (Japan), Percipient (Singapore)
+North America: IAMConcepts (Canada), NeuraFlash (US), Ascendient Learning (US)
+Flag could be added for countires
+Accenture Tech Acquisition Analysis | 2020–2025
+
+### Notes:
+
+<!-- Slide number: 6 -->
+
+SECTION 3
+Major Acquisitions by Domain
+
+AI & Digital Transformation
+Cybersecurity & Identity
+Infrastructure & Engineering
+Halfspace (80 AI pros, Nordics), Yumemi (400 UX/dev, Japan), NeuraFlash (agentic AI, Salesforce), SI&C (data/AI, Japan).
+CyberCX (A$1B+, 1,400 pros, Asia-Pacific) — Accenture's largest ever cyber deal. IAMConcepts (Canada, IAM for critical infrastructure).
+Sipal IPS (250 aerospace pros, Italy), Systema (240+ MES/smart factory pros, Germany), Soben, IQT Group — all strengthening Industry X.
+
+Learning, Reskilling & Talent
+Financial & Advisory Services
+Ascendient Learning (850+ IT courses, 75 pros), Aidemy (130 AI/reskilling pros, Tokyo), TalentSprint — all fueling LearnVantage.
+Altus Consulting (insurance & investments advisory, UK). Allitix (73 Anaplan specialists, connected enterprise planning). Percipient (digital twin fintech, Singapore).
+Accenture Tech Acquisition Analysis | 2020–2025
+
+### Notes:
+
+<!-- Slide number: 7 -->
+A chart could be better here
+
+SECTION 4
+Integration Outcomes & Organizational Realignment
+
+✓  Successes
+⚠  Challenges
+CyberCX and IAMConcepts effectively embedded into Accenture's global cybersecurity offerings.
+Allitix (73 Anaplan specialists) rapidly scaled integrated enterprise planning.
+Halfspace integration achieved low post-acquisition attrition; key talent retained.
+Reinvention Services (Sept 2025) provides cohesive integration framework reducing siloed operations.
+Inconsistent onboarding experiences & cultural misalignment — especially in non-US regions.
+AI-driven value realization post-acquisition slower than expected due to client hesitancy.
+Headcount fell 11,000 (791K → 779K) during restructuring; two acquisitions divested.
+Internal readiness gaps limit full integration effectiveness across service lines.
+Spacing not consistent
+
+$865M Restructuring  |  77,000 AI & Data Specialists  |  11,000 Headcount Reduction  |  2 Acquisitions Divested
+Accenture Tech Acquisition Analysis | 2020–2025
+
+### Notes:
+
+<!-- Slide number: 8 -->
+
+SECTION 5
+Financial & Market Impact of Acquisitions
+
+$69.7B
+$5.9B
+$2.7B
+FY25 Total Revenue (+7% YoY)
+Advanced AI Bookings (+~100%)
+Advanced AI Revenue (+~200%)
+Market Positioning Gains
+Cybersecurity: $7.16B total revenue (Gartner 2024) — $4.23B Professional Services + $2.93B Managed Security.
+AI market: Accenture's GenAI practice tripled in revenue within a single fiscal year.
+Learning: LearnVantage now spans 850+ courses with AWS, SAP, NVIDIA, Microsoft certification tracks.
+Global cybersecurity spending set to grow from $193B (2024) to $240B (2026); Accenture well-positioned.
+Accenture Tech Acquisition Analysis | 2020–2025
+
+### Notes:
+
+<!-- Slide number: 9 -->
+
+SECTION 6
+Reinvention Services as a Competitive Lever
+
+Strategy
+
+Consulting
+
+Technology
+
+Operations
+
+Song
+Icons should be there
+
+AI-EMBEDDED REINVENTION SERVICES MODEL  (Effective September 1, 2025 | Led by Manish Sharma, Chief Services Officer)
+Acquired capabilities are embedded directly into service lines — not managed as standalone units.
+Addresses gaps in AI autonomy, sovereign cybersecurity, enterprise planning & reskilling simultaneously.
+Delivers end-to-end, cross-service reinvention to clients via a single integrated unit.
+The color used is very faded
+Accenture Tech Acquisition Analysis | 2020–2025
+
+### Notes:
+
+<!-- Slide number: 10 -->
+
+SECTION 7
+Forward-Looking Acquisition Opportunities
+
+Agentic AI
+Sovereign Cybersecurity
+AI-Powered Learning
+Firms building autonomous, multi-step AI agents for enterprise workflows. Integrates into AI Refinery platform and Reinvention Services delivery.
+Data-sovereignty enforcement, sovereign cloud infrastructure, national AI governance tools — critical in Europe and regulated markets.
+Adaptive learning, skills forecasting, immersive training platforms to strengthen LearnVantage and sustain enterprise AI adoption.
+Value Creation Potential
+Agentic AI deals open new revenue streams in AI orchestration services & reusable agent frameworks.
+AI-driven cybersecurity market projected to grow from $31.5B (2025) to $93.8B by 2030 (CAGR: 24.4%).
+Smaller cybersecurity firms ($50M–$300M ARR) increasingly seeking acquirers — 20-25% rise in inbound inquiries.
+Firms embedding AI into post-merger integration are 4× more likely to realize post-acquisition value.
+Accenture Tech Acquisition Analysis | 2020–2025
+
+### Notes:
+
+<!-- Slide number: 11 -->
+
+SECTION 8
+Strategic Recommendations
+
+8.1  Prioritized Domains & Geographies
+Prioritize agentic AI firms in North America & Europe.
+Expand cybersecurity footprint in Southeast Asia & Middle East.
+Target AI-powered learning platforms globally to support LearnVantage scale.
+
+8.2  Integration Enhancements
+Embed agentic AI into post-merger integration workflows — 4× better value realization.
+Deploy real-time analytics for cultural alignment and talent sentiment monitoring.
+Build quantifiable change management plans with measurable retention milestones.
+
+8.3  Reinvention Services Alignment
+Acquire firms capable of cross-service delivery across Strategy, Consulting, Technology, Operations & Song.
+Prioritize explainable AI & secure identity firms to reinforce trust-centric Reinvention Services.
+Target digital-core modernization plays — firms with cloud-first, AI-ready infrastructure capabilities.
+Accenture Tech Acquisition Analysis | 2020–2025
+
+### Notes:
+
+<!-- Slide number: 12 -->
+
+Acquisitions as a
+Reinvention Engine
+Accenture's disciplined M&A approach — 326 acquisitions, unified into the Reinvention Services model —
+has transformed it from a consulting firm into a full-spectrum AI-powered reinvention partner.
+
+Accenture Tech Acquisition Analysis  |  Strategic Intelligence Report  |  2020–2025
+
+### Notes:
