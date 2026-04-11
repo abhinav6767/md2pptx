@@ -31,13 +31,13 @@ class MultiAgentOrchestrator:
 
         print("\n    [Orchestrator] 3/4 - Image Agent (Generating Visuals)...")
         for i, slide in enumerate(storyline.slides):
-            if slide.recommended_visual == 'image' and slide.visual_reference:
+            if slide.recommended_visual in ('image', 'ultra_dense', 'hero_header', 'sidebar_split') and slide.visual_reference:
                 # Try to generate an image
                 img_path = self.image_agent.generate_image(slide.visual_reference, i)
                 if img_path:
                     slide.image_url = img_path
-                else:
-                    # Fallback to text if img gen failed
+                elif slide.recommended_visual == 'image':
+                    # Fallback to text if img gen failed merely for 'image' slides
                     slide.recommended_visual = 'text'
 
         print("\n    [Orchestrator] 4/4 - Layout Assessment Agent (Grid Mapping)...")

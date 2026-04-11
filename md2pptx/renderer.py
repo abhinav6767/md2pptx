@@ -51,10 +51,17 @@ class PPTXRenderer:
             prs.part.drop_rel(rId)
             prs.slides._sldIdLst.remove(prs.slides._sldIdLst[0])
 
-        # Create mapping of layout name to index
         layout_map = {l.name: l.index for l in self.info.layouts}
 
         chart_idx = 0
+        image_idx = 0
+        mask_shapes = [
+            MSO_SHAPE.ROUNDED_RECTANGLE, 
+            MSO_SHAPE.OVAL, 
+            MSO_SHAPE.SNIP_1_RECTANGLE, 
+            MSO_SHAPE.ROUND_2_DIAG_RECTANGLE,
+            MSO_SHAPE.ROUND_1_RECTANGLE
+        ]
 
         # Render each slide
         for i, slide_content in enumerate(storyline.slides):
@@ -78,41 +85,61 @@ class PPTXRenderer:
                     ph.text = slide_content.subtitle
                     self._style_text_frame(ph.text_frame, FONT_SUBTITLE, self.design.colors.text_dark)
 
-            if not title_set:
-                self._add_title_shape(slide, slide_content.title)
-
-            # Route visual content
             visual = slide_content.recommended_visual
+            has_bullets = bool(slide_content.bullets)
+            has_image = visual in ("image", "ultra_dense", "hero_header", "sidebar_split") and getattr(slide_content, 'image_url', None) and os.path.exists(slide_content.image_url)
+
+            # --- Z-Order Override for Premium Layouts ---
+            # Native placeholders sit at the bottom. For custom solid backgrounds, we must
+            # clear the placeholders and redraw text on top to prevent obstruction.
+            if visual in ("hero_header", "sidebar_split"):
+                for shape in slide.shapes:
+                    if shape.has_text_frame:
+                        shape.text_frame.clear()  # Hide native text to allow manual layering on top
+                title_set = True # Prevent _add_title_shape from running natively
             
-            # Two-column text layout
-            if slide_content.is_two_column and slide_content.bullets:
+            # 1. Two-column text layout
+            if slide_content.is_two_column and has_bullets:
                 mid = len(slide_content.bullets) // 2
                 self._add_column_bullets(slide, slide_content.bullets[:mid], COL_LEFT_LEFT, COL_TOP, COL_LEFT_WIDTH, COL_HEIGHT)
                 self._add_column_bullets(slide, slide_content.bullets[mid:], COL_RIGHT_LEFT, COL_TOP, COL_RIGHT_WIDTH, COL_HEIGHT)
             
-            # Single-column text layout
-            elif visual == "text" and slide_content.bullets:
+            # 2. Single-column text layout
+            elif visual == "text" and has_bullets:
                 self._add_bullets(slide, slide_content.bullets, center_align=False)
 
-            # Image
-            elif visual == "image" and getattr(slide_content, 'image_url', None):
-                if os.path.exists(slide_content.image_url):
-                    slide.shapes.add_picture(
-                        slide_content.image_url,
-                        int(CHART_LEFT), int(CHART_TOP),
-                        int(CHART_WIDTH), int(CHART_HEIGHT)
-                    )
+            # 3. Mixed Media: Text + Image (50/50 split with exact padding)
+            elif visual == "image" and has_bullets and has_image:
+                # Text on left
+                self._add_column_bullets(slide, slide_content.bullets, COL_LEFT_LEFT, COL_TOP, COL_LEFT_WIDTH, COL_HEIGHT)
+                
+                # Enforce precise margin padding between columns
+                pic = slide.shapes.add_picture(
+                    slide_content.image_url,
+                    int(COL_RIGHT_LEFT), int(COL_TOP),
+                    int(COL_RIGHT_WIDTH), int(COL_HEIGHT)
+                )
+                pic.auto_shape_type = mask_shapes[image_idx % len(mask_shapes)]
+                image_idx += 1
 
-            # Chart Processing
+            # 4. Image Only (Full width with rotating shape mask)
+            elif visual == "image" and has_image:
+                pic = slide.shapes.add_picture(
+                    slide_content.image_url,
+                    int(CHART_LEFT), int(CHART_TOP),
+                    int(CHART_WIDTH), int(CHART_HEIGHT)
+                )
+                pic.auto_shape_type = mask_shapes[image_idx % len(mask_shapes)]
+                image_idx += 1
+
+            # 5. Chart Processing (with optional text left if requested)
             elif visual == "chart" and slide_content.visual_reference:
-                # Find matching table from the document
                 matched_table = None
                 for t in doc.all_tables:
                     if t.title == slide_content.visual_reference or t.title in slide_content.visual_reference:
                         matched_table = t
                         break
                 
-                # If no matching table, try first numerical table
                 if not matched_table:
                     for t in doc.all_tables:
                         if t.has_numerical_data:
@@ -120,8 +147,6 @@ class PPTXRenderer:
                             break
 
                 if matched_table:
-                    # Construct chart candidate dynamically
-                    # We default to BAR chart if not specified in prompt, but we can determine heuristic here
                     candidate = ChartCandidate(
                         table=matched_table,
                         chart_type="bar" if len(matched_table.rows) < 10 else "line",
@@ -129,17 +154,137 @@ class PPTXRenderer:
                     )
                     chart_path = self.chart_gen.generate(candidate, chart_idx)
                     if chart_path and os.path.exists(chart_path):
-                        slide.shapes.add_picture(
-                            chart_path,
-                            int(CHART_LEFT), int(CHART_TOP),
-                            int(CHART_WIDTH), int(CHART_HEIGHT)
-                        )
+                        if has_bullets:
+                            # Mixed media Text + Chart
+                            self._add_column_bullets(slide, slide_content.bullets, COL_LEFT_LEFT, COL_TOP, COL_LEFT_WIDTH, COL_HEIGHT)
+                            slide.shapes.add_picture(
+                                chart_path,
+                                int(COL_RIGHT_LEFT), int(COL_TOP),
+                                int(COL_RIGHT_WIDTH), int(COL_HEIGHT)
+                            )
+                        else:
+                            # Full width chart
+                            slide.shapes.add_picture(
+                                chart_path,
+                                int(CHART_LEFT), int(CHART_TOP),
+                                int(CHART_WIDTH), int(CHART_HEIGHT)
+                            )
                     chart_idx += 1
                 else:
-                    # Fallback to bullets
                     self._add_bullets(slide, slide_content.bullets, center_align=False)
 
-            # Infographic Processing
+            # 5.5. Ultra-Dense (Title + Text Left + Image Top-Right + Infographic Bottom-Right)
+            elif visual == "ultra_dense":
+                # 1. Text on Left
+                self._add_column_bullets(slide, slide_content.bullets, COL_LEFT_LEFT, COL_TOP, COL_LEFT_WIDTH, COL_HEIGHT)
+                
+                # 2. Image on Top Right (if exists)
+                img_exists = has_image
+                if img_exists:
+                    img_height = COL_HEIGHT / 2 - Inches(0.15)
+                    pic = slide.shapes.add_picture(
+                        slide_content.image_url,
+                        int(COL_RIGHT_LEFT), int(COL_TOP),
+                        int(COL_RIGHT_WIDTH), int(img_height)
+                    )
+                    pic.auto_shape_type = mask_shapes[image_idx % len(mask_shapes)]
+                    image_idx += 1
+                
+                # 3. Miniature Infographic on Bottom Right
+                info_top = COL_TOP + (COL_HEIGHT / 2) + Inches(0.15) if img_exists else COL_TOP
+                info_height = COL_HEIGHT / 2 - Inches(0.15) if img_exists else COL_HEIGHT
+                bounds = (COL_RIGHT_LEFT, info_top, COL_RIGHT_WIDTH, info_height)
+                
+                info_type = slide_content.visual_reference or "process"
+                info_type = info_type.lower()
+                mapped_type = "process"
+                if "timeline" in info_type: mapped_type = "timeline"
+                elif "comparison" in info_type: mapped_type = "comparison"
+                elif "metrics" in info_type: mapped_type = "metrics"
+                
+                import copy
+                info_candidate = InfographicCandidate(
+                    infographic_type=mapped_type,
+                    title=slide_content.title,
+                    items=copy.deepcopy(slide_content.bullets)
+                )
+                self.infographic_gen.generate(slide, info_candidate, bounds=bounds)
+
+            # 5.6 Premium: Hero Header
+            elif visual == "hero_header":
+                # Top 45% Image
+                hero_height = Inches(3.3)
+                if has_image:
+                    pic = slide.shapes.add_picture(
+                        slide_content.image_url,
+                        0, 0, Inches(13.33), int(hero_height)
+                    )
+                
+                # Intersecting semi-circle (Oval slightly off bottom)
+                oval_width = Inches(8.0)
+                oval_height = Inches(4.5)
+                oval_left = (Inches(13.33) - oval_width) / 2
+                oval_top = hero_height - (oval_height / 2)
+                
+                oval = slide.shapes.add_shape(MSO_SHAPE.OVAL, int(oval_left), int(oval_top), int(oval_width), int(oval_height))
+                oval.fill.solid()
+                oval.fill.fore_color.rgb = self.design.colors.primary
+                oval.line.fill.background()
+                
+                # Title manually layered on top
+                tx_box = slide.shapes.add_textbox(int(oval_left + Inches(0.5)), int(oval_top + Inches(1.0)), int(oval_width - Inches(1.0)), Inches(1.5))
+                tx_box.text_frame.word_wrap = True
+                tx_box.text_frame.text = slide_content.title.upper()
+                self._style_text_frame(tx_box.text_frame, Pt(36), self.design.colors.text_light, bold=True, alignment=PP_ALIGN.CENTER)
+                
+                # Generate bottom metrics
+                info_candidate = InfographicCandidate(infographic_type="premium_cards", title="", items=slide_content.bullets)
+                bounds = (Inches(0.5), hero_height + Inches(1.5), Inches(12.33), Inches(2.5))
+                self.infographic_gen.generate(slide, info_candidate, bounds=bounds)
+
+            # 5.7 Premium: Sidebar Split
+            elif visual == "sidebar_split":
+                # Left Sidebar 33%
+                sb_width = Inches(4.44)
+                sb_top_height = Inches(3.75)
+                
+                # Solid Red Top
+                rect = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0, int(sb_width), int(sb_top_height))
+                rect.fill.solid()
+                rect.fill.fore_color.rgb = self.design.colors.primary
+                rect.line.fill.background()
+                
+                # Title overlaid securely
+                tb = slide.shapes.add_textbox(Inches(0.3), Inches(0.5), int(sb_width - Inches(0.6)), Inches(2.5))
+                tb.text_frame.word_wrap = True
+                tb.text_frame.text = slide_content.title
+                self._style_text_frame(tb.text_frame, Pt(28), self.design.colors.text_light, bold=True)
+                
+                if slide_content.subtitle:
+                    p = tb.text_frame.add_paragraph()
+                    p.text = slide_content.subtitle
+                    self._style_text_frame(tb.text_frame, Pt(14), self.design.colors.text_light)
+
+                # Image Bottom (Curved)
+                if has_image:
+                    img_top = sb_top_height
+                    img_height = Inches(3.75)
+                    pic = slide.shapes.add_picture(
+                        slide_content.image_url,
+                        Inches(0.2), int(img_top + Inches(0.2)), int(sb_width - Inches(0.4)), int(img_height - Inches(0.4))
+                    )
+                    pic.auto_shape_type = MSO_SHAPE.OVAL 
+
+                # Process graphics mapping to the right 66%
+                info_type = slide_content.visual_reference or "process"
+                if "comparison" in info_type.lower(): mapped_type = "comparison"
+                else: mapped_type = "gear_process"
+                
+                info_candidate = InfographicCandidate(infographic_type=mapped_type, title="", items=slide_content.bullets)
+                bounds = (sb_width + Inches(0.3), Inches(1.0), Inches(13.33) - sb_width - Inches(0.6), Inches(5.5))
+                self.infographic_gen.generate(slide, info_candidate, bounds=bounds)
+
+            # 6. Infographic Processing (Uses bullets to generate shapes)
             elif visual == "infographic":
                 info_type = slide_content.visual_reference or "process"
                 info_type = info_type.lower()

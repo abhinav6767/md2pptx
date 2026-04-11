@@ -20,16 +20,29 @@ class StorylineAgent:
             content += f"## {sec.title}\n{text[:1000]}\n"
         
         prompt = f"""
-        You are an expert presentation designer. Your task is to extract the key narrative from the provided text and structure it into exactly {self.target_slides} slides.
+        You are an elite management consultant and presentation designer. Your task is to extract the key narrative from the provided text and structure it into exactly {self.target_slides} highly professional presentation slides.
         
         Guidelines:
-        1. Narrative Flow: Ensure the first slide is the Cover, the second is an Agenda, followed by Executive Summary, core content, and a Conclusion slide, ending with a Thank You slide.
-        2. Content Structure: Rewrite the text to be punchy and structured. AVOID excessive bullet points. Keep text minimal (max 6-8 lines total per slide) and prioritize a clear visual hierarchy (one key message per slide).
-        3. Infographic & Visual Focus: Structure the text so it can seamlessly translate into visual layouts (e.g., process steps, comparisons, key metrics) rather than paragraphs.
-        4. Emojis: Use tasteful emojis to make the content visually engaging (1-2 per slide maximum). Target conceptual and data-driven insights.
-        
+        1. Narrative Flow: 
+           - Start with a Cover slide, then Agenda, then Executive Summary.
+           - Build the core content logically, ending with a Conclusion/Takeaways slide, and finally a Thank You slide.
+        2. Infographic First Approach (CRITICAL):
+           - Before placing text, ask yourself: “Can this be visualized?”.
+           - If YES → Set 'recommended_visual' to 'infographic' (e.g., process flow, timeline, metrics, comparison). Convert the text into short labels or steps rather than paragraphs.
+           - If NO → Keep text minimal (max 6 lines total per slide). Avoid bullet overload. Focus on 1 clear takeaway per slide.
+        3. Visuals over Text:
+           - Completely avoid paragraphs. Synthesize into punchy, consultant-grade lists or diagrams.
+           - We strongly prefer mixed-media slides (e.g. Text + Image side-by-side) over text-only slides. Use 'image' or 'chart' or 'infographic' as 'recommended_visual' whenever data or concepts support it.
+           - Premium Layout 1 (Hero Header): If the slide is an Executive Summary, Agenda, or High-Level overview, set 'recommended_visual' to 'hero_header'. This crafts a stunning full-width top image with 4 sleek metric cards at the bottom.
+           - Premium Layout 2 (Sidebar Split): If the slide is a deep-dive, process, or comparison, set 'recommended_visual' to 'sidebar_split'. This creates a solid colored 33% left sidebar mapping into a large canvas infographics area on the right.
+           - Avoid 'ultra_dense' unless there is too much data to fit in a standard layout. Choose 'hero_header' or 'sidebar_split' first for maximum premium impact.
+        4. Hierarchy & Tone: 
+           - Provide ONE clear key message per slide.
+           - Establish clear hierarchy: Title (Primary message) > Subtitle (optional context) > Body Content (supporting points).
+           - Use tasteful emojis as modern bullet icons where appropriate.
+           
         Source Content:
-        {content[:30000]} # Trim to fit typical Gemini prompts if needed
+        {content[:40000]} # Trim to fit typical Gemini prompts if needed
         """
         
         response = self.client.models.generate_content(

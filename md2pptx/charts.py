@@ -58,7 +58,11 @@ class ChartGenerator:
                 from .agents.chart_agent import ChartAgent
                 print(f"  [ChartGenerator] Summoning AI Chart Agent for dynamic, unique {candidate.chart_type} chart...")
                 agent = ChartAgent()
-                code = agent.generate_chart_code(candidate, filepath)
+                code = agent.generate_chart_code(
+                    candidate, 
+                    filepath, 
+                    theme_colors=self.design.colors.chart_colors()
+                )
                 
                 # Execute AI code in a controlled namespace
                 local_vars = {"filepath": filepath}
