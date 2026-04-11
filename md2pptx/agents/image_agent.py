@@ -17,12 +17,12 @@ class ImageAgent:
         if not prompt:
             return None
             
-        print(f"    [ImageAgent] Attempting to generate image with gemini-3.1-flash-image-preview for: {prompt[:50]}...")
+        print(f"    [ImageAgent] Attempting to generate image with gemini-2.5-flash-image for: {prompt[:50]}...")
         try:
             from .client import get_client
             client = get_client()
             result = client.models.generate_images(
-                model='gemini-3.1-flash-image-preview',
+                model='gemini-2.5-flash-image',
                 prompt=prompt,
                 config=dict(
                     number_of_images=1,
@@ -35,7 +35,7 @@ class ImageAgent:
                 image.save(filepath)
                 return filepath
         except Exception as e:
-            print(f"    [ImageAgent] Warning: 'gemini-3.1-flash-image-preview' generation failed ({e}). Falling back to LoremFlickr...")
+            print(f"    [ImageAgent] Warning: 'gemini-2.5-flash-image' generation failed ({e}). Falling back to LoremFlickr...")
             
         print(f"    [ImageAgent] Sourcing fallback image for: {prompt[:50]}...")
         try:
