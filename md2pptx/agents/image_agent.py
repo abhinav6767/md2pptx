@@ -1,5 +1,6 @@
 from typing import Optional
 import os
+from dotenv import load_dotenv
 import tempfile
 import io
 import requests
@@ -10,32 +11,60 @@ class ImageAgent:
     """Scrapes images from Unsplash based on keywords."""
     
     def __init__(self):
+        dotenv_path = os.path.join(os.path.dirname(__file__), "..", ".env")
+        load_dotenv(dotenv_path)
         self.output_dir = tempfile.mkdtemp(prefix="md2pptx_images_")
+        self.unsplash_access_key = os.getenv("unsplash_access_key")
         
     def generate_image(self, prompt: str, index: int) -> Optional[str]:
         """Attempt to generate an image using nanao-bana-2, fallback to Unsplash."""
         if not prompt:
             return None
             
-        print(f"    [ImageAgent] Attempting to generate image with gemini-2.5-flash-image for: {prompt[:50]}...")
-        try:
-            from .client import get_client
-            client = get_client()
-            result = client.models.generate_images(
-                model='gemini-2.5-flash-image',
-                prompt=prompt,
-                config=dict(
-                    number_of_images=1,
-                    output_mime_type="image/jpeg",
-                )
-            )
-            for generated_image in result.generated_images:
-                image = Image.open(io.BytesIO(generated_image.image.image_bytes))
-                filepath = os.path.join(self.output_dir, f"img_{index}.jpg")
-                image.save(filepath)
-                return filepath
-        except Exception as e:
-            print(f"    [ImageAgent] Warning: 'gemini-2.5-flash-image' generation failed ({e}). Falling back to LoremFlickr...")
+        # [ImageAgent] Commented out Gemini image generation as per request
+        # print(f"    [ImageAgent] Attempting to generate image with imagen-3.0-generate-001 for: {prompt[:50]}...")
+        # try:
+        #     from .client import get_client
+        #     client = get_client()
+        #     result = client.models.generate_images(
+        #         model='imagen-3.0-generate-001',
+        #         prompt=prompt,
+        #         config=dict(
+        #             number_of_images=1,
+        #             output_mime_type="image/jpeg",
+        #         )
+        #     )
+        #     for generated_image in result.generated_images:
+        #         image = Image.open(io.BytesIO(generated_image.image.image_bytes))
+        #         filepath = os.path.join(self.output_dir, f"img_{index}.jpg")
+        #         image.save(filepath)
+        #         return filepath
+        # except Exception as e:
+        #     print(f"    [ImageAgent] Warning: 'imagen-3.0-generate-001' generation failed ({e}). Falling back to Unsplash/LoremFlickr...")
+
+        # Attempt Unsplash API first
+        if self.unsplash_access_key:
+            print(f"    [ImageAgent] Sourcing image from Unsplash for: {prompt[:50]}...")
+            try:
+                import urllib.parse
+                search_query = urllib.parse.quote(prompt[:100])
+                url = f"https://api.unsplash.com/search/photos?query={search_query}&per_page=1&client_id={self.unsplash_access_key}"
+                response = requests.get(url, timeout=10)
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get('results'):
+                        img_url = data['results'][0]['urls']['regular']
+                        img_response = requests.get(img_url, timeout=15)
+                        if img_response.status_code == 200:
+                            image = Image.open(io.BytesIO(img_response.content))
+                            filepath = os.path.join(self.output_dir, f"img_{index}.jpg")
+                            if image.mode != 'RGB':
+                                image = image.convert('RGB')
+                            image.save(filepath)
+                            return filepath
+                print(f"    [ImageAgent] Unsplash API returned status {response.status_code} or no results.")
+            except Exception as e:
+                print(f"    [ImageAgent] Warning: Unsplash API sourcing failed ({e}).")
             
         print(f"    [ImageAgent] Sourcing fallback image for: {prompt[:50]}...")
         try:
