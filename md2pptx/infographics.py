@@ -59,8 +59,8 @@ class InfographicGenerator:
                 theme_colors=self.design.colors.chart_colors()
             )
             
-            local_vars = {"filepath": filepath}
-            exec(code, {}, local_vars)
+            exec_globals = {"__builtins__": __builtins__, "filepath": filepath}
+            exec(code, exec_globals)
             
             if os.path.exists(filepath):
                 if bounds:

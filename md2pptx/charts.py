@@ -64,9 +64,9 @@ class ChartGenerator:
                     theme_colors=self.design.colors.chart_colors()
                 )
                 
-                # Execute AI code in a controlled namespace
-                local_vars = {"filepath": filepath}
-                exec(code, {}, local_vars)
+                # Execute AI code — pass globals() so matplotlib/numpy are accessible
+                exec_globals = {"__builtins__": __builtins__, "filepath": filepath}
+                exec(code, exec_globals)
                 
                 if os.path.exists(filepath):
                     return filepath
