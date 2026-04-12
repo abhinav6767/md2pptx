@@ -1,2 +1,22 @@
-md2pptx/.env
-md2pptx/.env
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+venv/
+.venv/
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+output/~$*
+*.log
+temp/
+pdf_content*.txt
+pptx_content.txt
