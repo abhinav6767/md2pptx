@@ -108,58 +108,86 @@ class TemplateLoader:
         colors = ThemeColors()
         fonts = ThemeFonts()
 
-        # Try extracting theme colors from the slide master
         try:
             sm = self.prs.slide_masters[0]
             theme = sm.element
-            # Extract from theme XML
             ns = {"a": "http://schemas.openxmlformats.org/drawingml/2006/main"}
             theme_elements = theme.findall(".//a:theme/a:themeElements/a:clrScheme", ns)
 
             if theme_elements:
                 clr = theme_elements[0]
-                dk1 = clr.find("a:dk1", ns)
-                dk2 = clr.find("a:dk2", ns)
-                accent1 = clr.find("a:accent1", ns)
-                accent2 = clr.find("a:accent2", ns)
+                
+                def extract_rgb(elem):
+                    if elem is None:
+                        return None
+                    srgb = elem.find("a:srgbClr", ns)
+                    if srgb is not None:
+                        val = srgb.get("val", "")
+                        if len(val) == 6:
+                            return RGBColor(int(val[0:2],16), int(val[2:4],16), int(val[4:6],16))
+                    # Also handle sysClr (system color reference)
+                    sys_clr = elem.find("a:sysClr", ns)
+                    if sys_clr is not None:
+                        last_clr = sys_clr.get("lastClr", "")
+                        if len(last_clr) == 6:
+                            return RGBColor(int(last_clr[0:2],16), int(last_clr[2:4],16), int(last_clr[4:6],16))
+                    return None
 
-                # Try to extract srgbClr values
-                for elem, attr_name in [
-                    (dk1, "primary"), (accent1, "accent1"), (accent2, "accent2")
-                ]:
-                    if elem is not None:
-                        srgb = elem.find("a:srgbClr", ns)
-                        if srgb is not None:
-                            val = srgb.get("val", "")
-                            if len(val) == 6:
-                                r = int(val[0:2], 16)
-                                g = int(val[2:4], 16)
-                                b = int(val[4:6], 16)
-                                setattr(colors, attr_name, RGBColor(r, g, b))
+                # Extract all theme color slots
+                dk1_rgb = extract_rgb(clr.find("a:dk1", ns))
+                dk2_rgb = extract_rgb(clr.find("a:dk2", ns))
+                lt1_rgb = extract_rgb(clr.find("a:lt1", ns))
+                ac1_rgb = extract_rgb(clr.find("a:accent1", ns))
+                ac2_rgb = extract_rgb(clr.find("a:accent2", ns))
+                ac3_rgb = extract_rgb(clr.find("a:accent3", ns))
+                ac4_rgb = extract_rgb(clr.find("a:accent4", ns))
+                ac5_rgb = extract_rgb(clr.find("a:accent5", ns))
+                ac6_rgb = extract_rgb(clr.find("a:accent6", ns))
+
+                # Map to our design system intelligently:
+                # dk1 = primary dark (usually the brand color for headers)
+                # accent1/2 = supporting colors
+                if dk1_rgb: colors.primary = dk1_rgb
+                if dk2_rgb: colors.secondary = dk2_rgb
+                if lt1_rgb: colors.background = lt1_rgb
+                if ac1_rgb: colors.accent1 = ac1_rgb
+                if ac2_rgb: colors.accent2 = ac2_rgb
+                if ac3_rgb: colors.accent3 = ac3_rgb
+                if ac4_rgb: colors.accent4 = ac4_rgb
+                if ac5_rgb: colors.accent5 = ac5_rgb
+                # If secondary was not set via dk2, use accent1 as secondary
+                if dk2_rgb is None and ac1_rgb: colors.secondary = ac1_rgb
+                
+                # Auto-detect dark vs light text based on primary brightness
+                if dk1_rgb:
+                    brightness = (dk1_rgb[0]*299 + dk1_rgb[1]*587 + dk1_rgb[2]*114) / 1000
+                    if brightness < 128:
+                        colors.text_dark = dk1_rgb
+                    else:
+                        colors.text_dark = RGBColor(0x1A, 0x1A, 0x2E)
+                
+                # Table header uses primary
+                colors.table_header_bg = colors.primary
+                colors.divider_bg = colors.primary
         except Exception:
             pass  # Use defaults if theme extraction fails
 
-        # Try extracting fonts
+        # Try extracting fonts from slide master text styles
         try:
             sm = self.prs.slide_masters[0]
-            # Check first slide for font info
-            for slide in self.prs.slides:
-                for shape in slide.shapes:
-                    if shape.has_text_frame:
-                        for para in shape.text_frame.paragraphs:
-                            for run in para.runs:
-                                if run.font.name:
-                                    fonts.heading = run.font.name
-                                    fonts.body = run.font.name
-                                    break
-                            if fonts.heading != "Calibri":
-                                break
-                    if fonts.heading != "Calibri":
-                        break
-                if fonts.heading != "Calibri":
-                    break
+            ns = {"a": "http://schemas.openxmlformats.org/drawingml/2006/main",
+                  "p": "http://schemas.openxmlformats.org/presentationml/2006/main"}
+            # Look for <p:txStyles> -> <p:titleStyle> or <p:bodyStyle>
+            tx_styles = sm.element.find(".//p:txStyles", ns)
+            if tx_styles is not None:
+                latin = tx_styles.find(".//a:latin", ns)
+                if latin is not None and latin.get("typeface"):
+                    tf = latin.get("typeface")
+                    if tf and not tf.startswith("+"):
+                        fonts.heading = tf
+                        fonts.body = tf
         except Exception:
-            pass  # Use defaults
+            pass
 
         return DesignSystem(colors=colors, fonts=fonts)
 

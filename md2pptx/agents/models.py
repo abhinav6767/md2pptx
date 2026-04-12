@@ -7,7 +7,8 @@ class AgentSlide(BaseModel):
     bullets: List[str] = Field(description="List of concise bullet points for the slide (max 6 bullets). Use appropriate emojis.")
     speaker_notes: Optional[str] = Field(None, description="Speaker notes providing more context.")
     # Fields to be filled by subsequent agents
-    recommended_visual: str = Field("text", description="One of: text, chart, infographic, image, ultra_dense, hero_header, sidebar_split")
+    recommended_visual: str = Field("text", description="One of: text, chart, infographic, image, ultra_dense, hero_header, sidebar_split, numbered_list, swimlane, icon_cards, data_table, vertical_timeline")
+
     visual_reference: Optional[str] = Field(None, description="Reference to an infographic type, image prompt, etc.")
     layout_name: Optional[str] = Field(None, description="The specific Slide Master layout to use")
     is_two_column: bool = Field(False, description="Whether the text should be split into two columns")

@@ -26,21 +26,25 @@ class StorylineAgent:
         1. Narrative Flow: 
            - Start with a Cover slide, then Agenda, then Executive Summary.
            - Build the core content logically, ending with a Conclusion/Takeaways slide, and finally a Thank You slide.
-        2. Infographic First Approach (CRITICAL):
-           - Before placing text, ask yourself: “Can this be visualized?”.
-           - If YES → Set 'recommended_visual' to 'infographic' (e.g., process flow, timeline, metrics, comparison). Convert the text into short labels or steps rather than paragraphs.
-           - If NO → Keep text minimal (max 6 lines total per slide). Avoid bullet overload. Focus on 1 clear takeaway per slide.
-        3. Visuals over Text:
-           - Completely avoid paragraphs. Synthesize into punchy, consultant-grade lists or diagrams.
-           - We strongly prefer mixed-media slides (e.g. Text + Image side-by-side) over text-only slides. Use 'image' or 'chart' or 'infographic' as 'recommended_visual' whenever data or concepts support it.
-           - Premium Layout 1 (Hero Header): If the slide is an Executive Summary, Agenda, or High-Level overview, set 'recommended_visual' to 'hero_header'. This crafts a stunning full-width top image with 4 sleek metric cards at the bottom.
-           - Premium Layout 2 (Sidebar Split): If the slide is a deep-dive, process, or comparison, set 'recommended_visual' to 'sidebar_split'. This creates a solid colored 33% left sidebar mapping into a large canvas infographics area on the right.
-           - Avoid 'ultra_dense' unless there is too much data to fit in a standard layout. Choose 'hero_header' or 'sidebar_split' first for maximum premium impact.
-        4. Hierarchy & Tone: 
-           - Provide ONE clear key message per slide.
-           - Establish clear hierarchy: Title (Primary message) > Subtitle (optional context) > Body Content (supporting points).
-           - Use tasteful emojis as modern bullet icons where appropriate.
-           
+
+        2. Visual-First Design (CRITICAL — follow strictly):
+           NEVER use `text` or bullet-only slides. Every slide must have a visual. Choose the best type:
+
+           - `numbered_list`: Use for 3-6 mechanisms, factors, or key points where order matters (e.g. "5 Key Risks", "4 Drivers"). Bullets must follow format "Header Title: Description detail".
+           - `swimlane`: Use for parallel or multi-track processes/pillars where each item has equal weight (e.g. "3 Strategic Pillars", "5-step Approach"). Bullets must follow "Header: Description" format.
+           - `icon_cards`: Use for categorised safeguards, recommendations, or frameworks with 4-6 distinct topics (e.g. "Institutional, Retail, Operational safeguards"). Bullets must follow "Category Name: What it means" format.
+           - `data_table`: Use when content contains quantitative indicators, metrics, or statistics with multiple dimensions. Bullets must follow "Indicator | Value | Year | Source" pipe-separated format.
+           - `vertical_timeline`: Use for historical progressions, phase rollouts, or step-by-step sequences in chronological order.
+           - `chart`: Use when there is explicit tabular data to visualize (bar, line, pie). Set visual_reference to the name of the relevant table.
+           - `hero_header`: Use for Executive Summary, Agenda/Overview, or high-level overview slides. Generates a stunning full-width header image with metric cards.
+           - `sidebar_split`: Use for deep-dive or analytical slides with a single strong theme on the left and process/flow on the right.
+           - `image`: Use when a realistic photographic illustration will enhance the content.
+
+        3. Hierarchy & Tone:
+           - Every slide MUST have a Title (primary message) and MUST have a Subtitle (one sentence of context).
+           - Limit to 1 key message per slide. Keep bullets punchy and ≤ 12 words each.
+           - Do NOT use emojis in bullets — they cause rendering errors.
+            
         Source Content:
         {content[:40000]} # Trim to fit typical Gemini prompts if needed
         """

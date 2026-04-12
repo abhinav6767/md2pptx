@@ -19,10 +19,10 @@ class LayoutAgent:
         
         Rules for mapping:
         1. The first slide (Cover) should use a layout with "Cover" or "Title" in the name.
-        2. Content slides with text/bullets should use a layout with "Title" or "Content" or "Title only".
-        3. Slides with `recommended_visual` = 'chart' or 'infographic' or 'image' should prefer a "Blank" or "Title only" layout to maximize space.
+        2. Content slides with text/bullets should use a layout with "Title" or "Content" or "Title and Vertical Text".
+        3. AVOID "Blank" or "Thank You" for any slide that contains bullets, charts, or infographics. "Blank" should only be used as a last resort if no other layout fits.
         4. Section dividers should use a layout with "Divider" or "Section" in the name if available.
-        5. The last slide (Conclusion/Thank You) should use a layout with "Thank You" or "Blank".
+        5. "Thank You" should ONLY be used for the final slide. Do NOT use it for content slides.
         
         Slides to evaluate:
         {json.dumps([s.model_dump(exclude={'speaker_notes', 'bullets'}) for s in storyline.slides], indent=2)}

@@ -85,9 +85,40 @@ class PPTXRenderer:
                     ph.text = slide_content.subtitle
                     self._style_text_frame(ph.text_frame, FONT_SUBTITLE, self.design.colors.text_dark)
 
+            # 0. Forced Fallback for Title/Subtitle (if placeholders are missing)
+            # This ensures no slide is ever left empty or unbranded.
+            if not title_set:
+                self._add_title_shape(slide, slide_content.title)
+                title_set = True
+            
+            # Add short para (subtitle) fallback
+            if slide_content.subtitle:
+                # Check if subtitle was already set via placeholders
+                subtitle_set_already = False
+                for ph in slide.placeholders:
+                    if ph.placeholder_format.idx == 11 and ph.text:
+                        subtitle_set_already = True
+                        break
+                
+                if not subtitle_set_already:
+                    self._add_subtitle_paragraph(slide, slide_content.subtitle)
+
             visual = slide_content.recommended_visual
             has_bullets = bool(slide_content.bullets)
-            has_image = visual in ("image", "ultra_dense", "hero_header", "sidebar_split") and getattr(slide_content, 'image_url', None) and os.path.exists(slide_content.image_url)
+            
+            # --- Detect if this is a protected layout (Cover, Thank You, Divider)
+            # These layouts have their own rich template backgrounds — never overlay images on them.
+            layout_name_lower = (slide_content.layout_name or "").lower()
+            is_protected_layout = any(p in layout_name_lower for p in [
+                "cover", "thank you", "thank_you", "divider", "section"
+            ])
+            
+            has_image = (
+                not is_protected_layout
+                and visual in ("image", "ultra_dense", "hero_header", "sidebar_split")
+                and getattr(slide_content, 'image_url', None)
+                and os.path.exists(slide_content.image_url)
+            )
 
             # --- Z-Order Override for Premium Layouts ---
             # Native placeholders sit at the bottom. For custom solid backgrounds, we must
@@ -96,7 +127,8 @@ class PPTXRenderer:
                 for shape in slide.shapes:
                     if shape.has_text_frame:
                         shape.text_frame.clear()  # Hide native text to allow manual layering on top
-                title_set = True # Prevent _add_title_shape from running natively
+                # Premium layouts manage their own titles.
+                title_set = True 
             
             # 1. Two-column text layout
             if slide_content.is_two_column and has_bullets:
@@ -122,12 +154,13 @@ class PPTXRenderer:
                 pic.auto_shape_type = mask_shapes[image_idx % len(mask_shapes)]
                 image_idx += 1
 
-            # 4. Image Only (Full width with rotating shape mask)
+            # 4. Image Only (Full-width image placed BELOW title, not covering it)
             elif visual == "image" and has_image:
+                # Place image safely in the body zone (below title area)
                 pic = slide.shapes.add_picture(
                     slide_content.image_url,
-                    int(CHART_LEFT), int(CHART_TOP),
-                    int(CHART_WIDTH), int(CHART_HEIGHT)
+                    int(BODY_LEFT), int(BODY_TOP),
+                    int(BODY_WIDTH), int(BODY_HEIGHT)
                 )
                 pic.auto_shape_type = mask_shapes[image_idx % len(mask_shapes)]
                 image_idx += 1
@@ -172,6 +205,26 @@ class PPTXRenderer:
                     chart_idx += 1
                 else:
                     self._add_bullets(slide, slide_content.bullets, center_align=False)
+
+            # 5.5 Native Consultant Layouts — route bullets directly to premium generators
+            elif visual in ("numbered_list", "swimlane", "icon_cards", "data_table", "vertical_timeline"):
+                import copy
+                # Map visual type to infographic type name
+                info_type_map = {
+                    "numbered_list": "numbered_list",
+                    "swimlane": "swimlane",
+                    "icon_cards": "icon_cards",
+                    "data_table": "data_table",
+                    "vertical_timeline": "vertical_timeline",
+                }
+                info_candidate = InfographicCandidate(
+                    infographic_type=info_type_map[visual],
+                    title=slide_content.title,
+                    items=copy.deepcopy(slide_content.bullets),
+                    values=[]
+                )
+                body_bounds = (BODY_LEFT, BODY_TOP, BODY_WIDTH, BODY_HEIGHT)
+                self.infographic_gen.generate(slide, info_candidate, bounds=body_bounds)
 
             # 5.5. Ultra-Dense (Title + Text Left + Image Top-Right + Infographic Bottom-Right)
             elif visual == "ultra_dense":
@@ -248,22 +301,28 @@ class PPTXRenderer:
                 sb_width = Inches(4.44)
                 sb_top_height = Inches(3.75)
                 
-                # Solid Red Top
+                # Solid primary color top panel
                 rect = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0, int(sb_width), int(sb_top_height))
                 rect.fill.solid()
                 rect.fill.fore_color.rgb = self.design.colors.primary
                 rect.line.fill.background()
                 
-                # Title overlaid securely
+                # Title overlaid securely in white text (always visible on primary background)
                 tb = slide.shapes.add_textbox(Inches(0.3), Inches(0.5), int(sb_width - Inches(0.6)), Inches(2.5))
                 tb.text_frame.word_wrap = True
-                tb.text_frame.text = slide_content.title
-                self._style_text_frame(tb.text_frame, Pt(28), self.design.colors.text_light, bold=True)
+                p_title = tb.text_frame.paragraphs[0]
+                p_title.text = slide_content.title
+                p_title.font.size = Pt(26)
+                p_title.font.bold = True
+                p_title.font.color.rgb = self.design.colors.text_light  # ALWAYS white on primary bg
                 
                 if slide_content.subtitle:
-                    p = tb.text_frame.add_paragraph()
-                    p.text = slide_content.subtitle
-                    self._style_text_frame(tb.text_frame, Pt(14), self.design.colors.text_light)
+                    p_sub = tb.text_frame.add_paragraph()
+                    p_sub.text = slide_content.subtitle
+                    p_sub.font.size = Pt(12)
+                    p_sub.font.bold = False
+                    p_sub.font.color.rgb = self.design.colors.text_light  # ALWAYS white on primary bg
+
 
                 # Image Bottom (Curved)
                 if has_image:
@@ -326,6 +385,15 @@ class PPTXRenderer:
         tf.word_wrap = True
         self._style_text_frame(tf, FONT_TITLE, self.design.colors.text_dark, bold=True)
 
+    def _add_subtitle_paragraph(self, slide, subtitle: str):
+        """Adds a short summary paragraph (executive summary) below the title."""
+        txbox = slide.shapes.add_textbox(int(SUBTITLE_LEFT), int(SUBTITLE_TOP), int(SUBTITLE_WIDTH), int(SUBTITLE_HEIGHT))
+        tf = txbox.text_frame
+        tf.text = subtitle
+        tf.word_wrap = True
+        # Using a slightly larger font for the top para to make it stand out
+        self._style_text_frame(tf, Pt(15), self.design.colors.text_muted, bold=False, italic=True)
+
     def _add_bullets(self, slide, bullets: List[str], center_align: bool = False):
         txbox = slide.shapes.add_textbox(int(BODY_LEFT), int(BODY_TOP), int(BODY_WIDTH), int(BODY_HEIGHT))
         tf = txbox.text_frame
@@ -367,10 +435,11 @@ class PPTXRenderer:
         tf.paragraphs[0].font.size = FONT_SLIDE_NUMBER
         tf.paragraphs[0].font.color.rgb = self.design.colors.text_muted
 
-    def _style_text_frame(self, text_frame, font_size: Pt, color: RGBColor, bold: bool = False, alignment=None):
+    def _style_text_frame(self, text_frame, font_size: Pt, color: RGBColor, bold: bool = False, italic: bool = False, alignment=None):
         for para in text_frame.paragraphs:
             para.font.size = font_size
             para.font.color.rgb = color
             para.font.bold = bold
+            para.font.italic = italic
             if alignment:
                 para.alignment = alignment

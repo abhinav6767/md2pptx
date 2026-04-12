@@ -10,9 +10,11 @@ class ChartAgent:
         table = candidate.table
         chart_type = candidate.chart_type
         
-        # Strip all emojis/unsupported glyphs to prevent matplotlib FT2Font C++ crash
+        # Aggressively strip all non-ASCII characters (emojis) to prevent matplotlib FT2Font crash
         import re
-        def clean_txt(t): return re.sub(r'[^\w\s.,!?-]', '', str(t))
+        def clean_txt(t): 
+            if not t: return ""
+            return re.sub(r'[^\x00-\x7F]+', '', str(t))
         clean_headers = [clean_txt(h) for h in table.headers] if table.headers else []
         clean_rows = [[clean_txt(c) for c in row] for row in table.rows] if table.rows else []
         
@@ -30,20 +32,23 @@ Your task is to write ONLY executable Python code (NO markdown blocks, NO explan
 
 CRITICAL RULES:
 1. Write raw standard Python code only. Do not enclose it in markdown blocks!
-2. You MUST set the backend and import common libraries exactly at the top of your code: 
+2. You MUST set the backend, import common libraries, and force a standard font exactly at the top of your code: 
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
+plt.rcParams['font.family'] = 'sans-serif'
+plt.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Arial', 'Liberation Sans']
 
 3. Render a beautiful, modern {chart_type} chart utilizing the data below. Make it look stunning, premium, and unique (e.g. use gradients, stylized markers, dropshadows, or dark modern aesthetics).
-4. CRITICAL COLOR RULE: You MUST exclusively use the hex colors provided in `data['theme_colors']`. DO NOT INVENT OR REFER TO UNDEFINED VARIABLES. If you need a color, index the array `data['theme_colors'][i]`.
-5. Save the figure exactly using the variable `filepath` (it is pre-injected into the local namespace, do NOT write its string literal).
-6. Only use `fig.savefig(filepath, bbox_inches='tight', dpi=150)`. Do not use `plt.show()`.
-7. Convert string data to floats properly using string replacement (remove $, %, commas).
-8. Handle any data errors gracefully (skip invalid rows).
-9. DO NOT include raw Windows file paths in your code (this causes 'bad escape \P' errors). Use the literal variable `filepath` instead of a string.
-10. You MUST instantiate the data inline. DO NOT assume `data` is already defined. Start your code with exactly:
+4. DO NOT USE THE 'Montserrat' FONT OR ANY NON-STANDARD SYSTEM FONTS.
+5. CRITICAL COLOR RULE: You MUST exclusively use the hex colors provided in `data['theme_colors']`. DO NOT INVENT OR REFER TO UNDEFINED VARIABLES. If you need a color, index the array `data['theme_colors'][i]`.
+6. Save the figure exactly using the variable `filepath` (it is pre-injected into the local namespace, do NOT write its string literal).
+7. Only use `fig.savefig(filepath, bbox_inches='tight', dpi=150)`. Do not use `plt.show()`.
+8. Convert string data to floats properly using string replacement (remove $, %, commas).
+9. Handle any data errors gracefully (skip invalid rows).
+10. DO NOT include raw Windows file paths in your code (this causes 'bad escape \P' errors). Use the literal variable `filepath` instead of a string.
+11. You MUST instantiate the data inline. DO NOT assume `data` is already defined. Start your code with exactly:
 
 data = {data_json}
 
@@ -72,6 +77,8 @@ data = {data_json}
             "import math",
             "import textwrap",
             "from textwrap import wrap",
+            "plt.rcParams['font.family'] = 'sans-serif'",
+            "plt.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Arial', 'Liberation Sans']",
         ]
         # Remove duplicate top-level import lines from AI code
         ai_lines = code.splitlines()

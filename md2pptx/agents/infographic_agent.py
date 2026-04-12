@@ -8,9 +8,11 @@ class InfographicAgent:
         self.client = get_client()
 
     def generate_infographic_code(self, candidate, filepath: str, theme_colors: list = None) -> str:
-        # Strip all emojis/unsupported glyphs to prevent matplotlib FT2Font C++ crash
+        # Aggressively strip all non-ASCII characters (emojis) to prevent matplotlib FT2Font crash
         import re
-        def clean_txt(t): return re.sub(r'[^\w\s.,!?-]', '', str(t))
+        def clean_txt(t): 
+            if not t: return ""
+            return re.sub(r'[^\x00-\x7F]+', '', str(t))
         clean_items = [clean_txt(i) for i in candidate.items] if candidate.items else []
         
         data_json = json.dumps({
@@ -26,22 +28,25 @@ Your task is to write ONLY executable Python code (NO markdown blocks, NO explan
 
 CRITICAL RULES:
 1. Write raw standard Python code only. Do not enclose it in markdown blocks!
-2. You MUST set the backend and import common libraries exactly at the top of your code: 
+2. You MUST set the backend, import common libraries, and force a standard font exactly at the top of your code: 
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import re
 import math
+plt.rcParams['font.family'] = 'sans-serif'
+plt.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Arial', 'Liberation Sans']
 
 3. Render an amazing, deeply stylized {candidate.infographic_type} infographic. Use bubbles, flowcharts, or icons drawn with matplotlib shapes/text. Do not just draw a simple list. We want a very modern "wow" factor infographic.
-4. CRITICAL COLOR RULE: You MUST exclusively use the hex colors provided in `data['theme_colors']`. DO NOT INVENT OR REFER TO UNDEFINED VARIABLES (like `light_text_color`). If you need a color, index the array `data['theme_colors'][i]`.
-5. If the type is 'process', draw a linked node flow. If 'timeline', draw a beautiful timeline curve. If 'comparison', draw side-by-side gauge or metric layouts.
-6. Save the figure exactly using the variable `filepath` (it is pre-injected into the local namespace).
-7. Only use `fig.savefig(filepath, bbox_inches='tight', dpi=150, transparent=True)`. Do not use `plt.show()`.
-8. Turn off all axes grids, ticks, and borders so it looks strictly like an infographic, not a graph (`ax.axis('off')`).
-9. DO NOT include raw Windows file paths in your code (this causes 'bad escape \P' errors). Use the literal variable `filepath` instead of a string.
-10. You MUST instantiate the data inline. DO NOT assume `data` is already defined. Start your code with exactly:
+4. DO NOT USE THE 'Montserrat' FONT OR ANY NON-STANDARD SYSTEM FONTS.
+5. CRITICAL COLOR RULE: You MUST exclusively use the hex colors provided in `data['theme_colors']`. DO NOT INVENT OR REFER TO UNDEFINED VARIABLES. If you need a color, index the array `data['theme_colors'][i]`.
+6. If the type is 'process', draw a linked node flow. If 'timeline', draw a beautiful timeline curve. If 'comparison', draw side-by-side gauge or metric layouts.
+7. Save the figure exactly using the variable `filepath` (it is pre-injected into the local namespace).
+8. Only use `fig.savefig(filepath, bbox_inches='tight', dpi=150, transparent=True)`. Do not use `plt.show()`.
+9. Turn off all axes grids, ticks, and borders so it looks strictly like an infographic, not a graph (`ax.axis('off')`).
+10. DO NOT include raw Windows file paths in your code (this causes 'bad escape \P' errors). Use the literal variable `filepath` instead of a string.
+11. You MUST instantiate the data inline. DO NOT assume `data` is already defined. Start your code with exactly:
 
 data = {data_json}
 
@@ -70,6 +75,8 @@ data = {data_json}
             "import math",
             "import textwrap",
             "from textwrap import wrap",
+            "plt.rcParams['font.family'] = 'sans-serif'",
+            "plt.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Arial', 'Liberation Sans']",
         ]
         # Remove duplicate top-level import lines from AI code
         ai_lines = code.splitlines()
