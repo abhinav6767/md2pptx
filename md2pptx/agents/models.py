@@ -13,6 +13,7 @@ class AgentSlide(BaseModel):
     layout_name: Optional[str] = Field(None, description="The specific Slide Master layout to use")
     is_two_column: bool = Field(False, description="Whether the text should be split into two columns")
     image_url: Optional[str] = Field(None, description="Path to the generated image or visual asset")
+    image_url_secondary: Optional[str] = Field(None, description="Path to a second image for layouts that support two images")
 
 class AgentStoryline(BaseModel):
     slides: List[AgentSlide] = Field(description="The list of 10 to 15 slides forming the presentation.")

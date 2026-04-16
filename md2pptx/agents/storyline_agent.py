@@ -43,7 +43,9 @@ class StorylineAgent:
         3. Hierarchy & Tone:
            - Every slide MUST have a Title (primary message) and MUST have a Subtitle (one sentence of context).
            - Limit to 1 key message per slide. Keep bullets punchy and ≤ 12 words each.
-           - Do NOT use emojis in bullets — they cause rendering errors.
+           - USE emojis at the START of bullets where they genuinely aid clarity. Choose topic-relevant
+             emojis (e.g. 📊 for data, ⚠️ for risk, ✅ for benefits, 🚀 for growth, 💡 for insight,
+             🏦 for finance, 🌍 for global, ⚙️ for process, 🔬 for research). Limit to 1 emoji per bullet.
             
         Source Content:
         {content[:40000]} # Trim to fit typical Gemini prompts if needed

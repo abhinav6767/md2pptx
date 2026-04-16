@@ -93,3 +93,12 @@ class ImageAgent:
         except Exception as e:
             print(f"    [ImageAgent] Warning: Image sourcing failed. ({e})")
         return None
+
+    def generate_multiple_images(self, prompts: list, base_index: int) -> list:
+        """Generate images for multiple prompts, returning a list of valid paths."""
+        results = []
+        for offset, prompt in enumerate(prompts):
+            path = self.generate_image(prompt, base_index * 10 + offset)
+            if path:
+                results.append(path)
+        return results

@@ -32,13 +32,22 @@ class MultiAgentOrchestrator:
         print("\n    [Orchestrator] 3/4 - Image Agent (Generating Visuals)...")
         for i, slide in enumerate(storyline.slides):
             if slide.recommended_visual in ('image', 'ultra_dense', 'hero_header', 'sidebar_split') and slide.visual_reference:
-                # Try to generate an image
+                # Try to generate a primary image
                 img_path = self.image_agent.generate_image(slide.visual_reference, i)
                 if img_path:
                     slide.image_url = img_path
                 elif slide.recommended_visual == 'image':
                     # Fallback to text if img gen failed merely for 'image' slides
                     slide.recommended_visual = 'text'
+
+                # For layouts that support two images, generate a secondary image
+                if slide.recommended_visual in ('hero_header', 'ultra_dense') and slide.image_url:
+                    # Build a complementary secondary prompt (different angle/aspect)
+                    secondary_prompt = f"{slide.visual_reference} detail close-up abstract background"
+                    secondary_path = self.image_agent.generate_image(secondary_prompt, i * 100 + 99)
+                    if secondary_path:
+                        slide.image_url_secondary = secondary_path
+
 
         print("\n    [Orchestrator] 4/4 - Layout Assessment Agent (Grid Mapping)...")
         available_layouts = [l.name for l in template_loader.info.layouts]

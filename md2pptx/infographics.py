@@ -19,9 +19,56 @@ class InfographicGenerator:
     def __init__(self, design: DesignSystem):
         self.design = design
 
+    # ------------------------------------------------------------------
+    # Utility
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _tint(color: RGBColor, factor: float = 0.85) -> RGBColor:
+        """
+        Blend *color* towards white by *factor* (0 = original, 1 = white).
+        Used to derive subtle background tints from the template palette.
+        """
+        r = int(color[0] + (255 - color[0]) * factor)
+        g = int(color[1] + (255 - color[1]) * factor)
+        b = int(color[2] + (255 - color[2]) * factor)
+        return RGBColor(r, g, b)
+
+    @staticmethod
+    def _clamp_bounds(bounds: Optional[Tuple], min_w: float = None, min_h: float = None) -> Optional[Tuple]:
+        """
+        Ensure the bounding box is at least (min_w, min_h) in size.
+        Returns the clamped bounds tuple or None if bounds is None.
+        """
+        from pptx.util import Inches
+        if bounds is None:
+            return None
+        _min_w = min_w if min_w is not None else float(Inches(8.0))
+        _min_h = min_h if min_h is not None else float(Inches(3.5))
+        left, top, width, height = bounds
+        width  = max(width,  _min_w)
+        height = max(height, _min_h)
+        return (left, top, width, height)
+
+    @staticmethod
+    def _style_text_frame(text_frame, font_size, color: RGBColor,
+                          bold: bool = False, italic: bool = False,
+                          alignment=None):
+        """Apply uniform font and color to every paragraph in a text frame."""
+        for para in text_frame.paragraphs:
+            para.font.size = font_size
+            para.font.color.rgb = color
+            para.font.bold = bold
+            para.font.italic = italic
+            if alignment:
+                para.alignment = alignment
+
     def generate(self, slide, candidate: InfographicCandidate, bounds: Optional[Tuple[float, float, float, float]] = None):
         """Generate an infographic on the given slide. bounds=(left, top, width, height)"""
-        
+
+        # Guarantee minimum size so text always fits inside shapes
+        bounds = self._clamp_bounds(bounds)
+
         # 1) Priority: Native PPTX Shapes for structured/consultant layouts
         # We only fall back to AI matplotlib for truly complex data-driven visuals
         native_types = {
@@ -388,12 +435,14 @@ class InfographicGenerator:
 
         for i, item in enumerate(items[:n]):
             left = start_left + (box_width + gap) * i
-            
-            # Shadowed Body
+
+            # Shadowed Body — use template-derived background (FIX #3)
+            card_bg = self._tint(self.design.colors.primary, 0.93)
+            card_border = self._tint(self.design.colors.primary, 0.70)
             box = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, int(left), int(top), int(box_width), int(box_height))
             box.fill.solid()
-            box.fill.fore_color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
-            box.line.color.rgb = RGBColor(0xF0, 0xF0, 0xF0)
+            box.fill.fore_color.rgb = card_bg
+            box.line.color.rgb = card_border
             try:
                 box.shadow.inherit = False
                 box.shadow.visible = True
@@ -523,7 +572,7 @@ class InfographicGenerator:
             tf.paragraphs[0].font.size = Pt(16)
             tf.paragraphs[0].font.color.rgb = colors.text_light
 
-            # --- Separator line (thin horizontal rule between rows) ---
+            # --- Separator line (thin horizontal rule between rows) — use palette tint ---
             if i < n - 1:
                 sep = slide.shapes.add_shape(
                     MSO_SHAPE.RECTANGLE,
@@ -531,7 +580,7 @@ class InfographicGenerator:
                     int(text_col_w), int(Inches(0.02))
                 )
                 sep.fill.solid()
-                sep.fill.fore_color.rgb = RGBColor(0xE8, 0xE8, 0xE8)
+                sep.fill.fore_color.rgb = self._tint(colors.primary, 0.75)
                 sep.line.fill.background()
 
             # --- Content text box ---
@@ -608,11 +657,13 @@ class InfographicGenerator:
             # --- Content card ---
             card_top = vline_top + vline_height
             card_height = total_height - badge_size - vline_height
+            card_bg = self._tint(color, 0.88)
+            card_border = self._tint(color, 0.55)
             card = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, int(col_left), int(card_top), int(col_width), int(card_height))
             card.fill.solid()
-            card.fill.fore_color.rgb = RGBColor(0xF7, 0xF8, 0xFA)
-            card.line.color.rgb = RGBColor(0xE0, 0xE0, 0xE8)
-            
+            card.fill.fore_color.rgb = card_bg
+            card.line.color.rgb = card_border
+
             # Colored top accent bar on card
             accent = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, int(col_left), int(card_top), int(col_width), int(Inches(0.06)))
             accent.fill.solid()
@@ -678,11 +729,13 @@ class InfographicGenerator:
             card_top = top + row_idx * (row_height + row_gap)
             color = accent_colors[i % len(accent_colors)]
 
-            # Background card
+            # Background card — use template-derived colors (FIX #3)
+            card_bg = self._tint(color, 0.92)
+            card_border = self._tint(color, 0.60)
             card = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, int(card_left), int(card_top), int(col_width), int(row_height))
             card.fill.solid()
-            card.fill.fore_color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
-            card.line.color.rgb = RGBColor(0xE5, 0xE5, 0xEC)
+            card.fill.fore_color.rgb = card_bg
+            card.line.color.rgb = card_border
             try:
                 card.shadow.inherit = False
                 card.shadow.visible = True
@@ -768,12 +821,13 @@ class InfographicGenerator:
             p.alignment = PP_ALIGN.LEFT
             x += cw
 
-        # Data rows
-        alt_bg = RGBColor(0xF2, 0xF6, 0xFF)
+        # Data rows — use template palette for alternating rows (FIX #3)
+        alt_bg = self._tint(colors.primary, 0.90)
+        row_bg = self._tint(colors.primary, 0.97)
         for ri, row in enumerate(rows):
             row_top = top + row_h * (ri + 1)
             x = left
-            bg_color = alt_bg if ri % 2 == 0 else RGBColor(0xFF, 0xFF, 0xFF)
+            bg_color = alt_bg if ri % 2 == 0 else row_bg
             for ci, (cell, cw) in enumerate(zip(row, col_widths)):
                 cell_shape = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, int(x), int(row_top), int(cw), int(row_h))
                 cell_shape.fill.solid()
