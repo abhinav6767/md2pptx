@@ -202,6 +202,41 @@ class TemplateLoader:
             return sm.slide_layouts[layout_idx]
         return sm.slide_layouts[0]
 
+    def get_placeholder_bounds(
+        self, layout_idx: int, ph_idx: int
+    ) -> Optional[Tuple[int, int, int, int]]:
+        """
+        Return (left, top, width, height) in EMU for a placeholder in a layout.
+        Returns None if the placeholder is not found in that layout.
+        """
+        sm = self.prs.slide_masters[0]
+        layouts = sm.slide_layouts
+        if not (0 <= layout_idx < len(layouts)):
+            return None
+        layout = layouts[layout_idx]
+        for ph in layout.placeholders:
+            if ph.placeholder_format.idx == ph_idx:
+                return (ph.left, ph.top, ph.width, ph.height)
+        return None
+
+    def get_body_bounds(
+        self, layout_idx: int
+    ) -> Optional[Tuple[int, int, int, int]]:
+        """
+        Return body placeholder (idx=1) bounds for a layout, falling back to
+        the master's body placeholder if the layout doesn't define one.
+        """
+        # Try layout body (idx=1)
+        bounds = self.get_placeholder_bounds(layout_idx, 1)
+        if bounds:
+            return bounds
+        # Try master body placeholder
+        sm = self.prs.slide_masters[0]
+        for ph in sm.placeholders:
+            if ph.placeholder_format.idx == 1:
+                return (ph.left, ph.top, ph.width, ph.height)
+        return None
+
 
 def find_templates(templates_dir: str) -> Dict[str, str]:
     """Find all available template .pptx files in a directory."""
